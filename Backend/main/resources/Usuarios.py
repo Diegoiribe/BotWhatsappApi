@@ -1,12 +1,12 @@
 from flask_restful import Resource
 from flask import request, jsonify
 from .. import db
-from main.models import UsuarioModel
+from main.models import Usuario as UsuarioModel
 import datetime as dt
 import requests
 import json
 
-class Usuario (Resource):
+class Usuario(Resource):
 
     def get(self, id):
         usuario = db.session.query(UsuarioModel).get_or_404(id)
@@ -22,19 +22,22 @@ class Usuario (Resource):
         usuario = db.session.query(UsuarioModel).get_or_404(id)
         data = request.get_json()
         for key, value in data.items():
-            if key in ['fecha_registro', 'fecha_cita'] and value:
+            if key in ['fecha_registro', 'date'] and value:
                 value = dt.datetime.fromisoformat(value)
+            if key == 'time' and value:
+                value = dt.datetime.strptime(value, "%H:%M:%S").time()
             setattr(usuario, key, value)
-        usuario.dias_para_cita = (usuario.fecha_cita - usuario.fecha_registro).days
+        
+        usuario.dias_para_cita = (usuario.date.date() - usuario.fecha_registro.date()).days
         db.session.commit()
 
         if usuario.dias_para_cita == 1:
-            print(f"Enviando mensaje a {usuario.telefono}")
-            send_whatsapp_message(usuario.telefono, f"Hola {usuario.nombre}, tu cita es mañana.")
+            print(f"Enviando mensaje a {usuario.telephone}")
+            send_whatsapp_message(usuario.telephone, f"Hola {usuario.name}, tu cita es mañana.")
 
         return usuario.to_json(), 201
     
-class Usuarios (Resource):
+class Usuarios(Resource):
 
     def get(self):
         page = request.args.get('page', 1, type=int)
@@ -53,8 +56,8 @@ class Usuarios (Resource):
         db.session.commit()
 
         if usuario.dias_para_cita == 1:
-            print(f"Enviando mensaje a {usuario.telefono}")
-            send_whatsapp_message(usuario.telefono, f"Hola {usuario.nombre}, tu cita es mañana.")
+            print(f"Enviando mensaje a {usuario.telephone}")
+            send_whatsapp_message(usuario.telephone, f"Hola {usuario.name}, tu cita es mañana.")
 
         return usuario.to_json(), 201
 

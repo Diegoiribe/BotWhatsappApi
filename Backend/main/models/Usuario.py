@@ -1,13 +1,13 @@
 from .. import db
 import datetime as dt
 
-class Usuario (db.Model):
+class Usuario(db.Model):
     __tablename__ = 'usuarios'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     telephone = db.Column(db.String(100), nullable=False)
     date = db.Column(db.DateTime, default=dt.datetime.now)
-    time = db.Column(db.Time, default=dt.datetime.now)
+    time = db.Column(db.Time, default=dt.datetime.now().time())
     fecha_registro = db.Column(db.DateTime, default=dt.datetime.now)
     dias_para_cita = db.Column(db.Integer, default=0)
 
@@ -21,7 +21,7 @@ class Usuario (db.Model):
             "telephone": self.telephone,
             "fecha_registro": self.fecha_registro.isoformat() if self.fecha_registro else None,
             "date": self.date.isoformat() if self.date else None,
-            "time": self.date.strftime("%H:%M:%S") if self.date else None,
+            "time": self.time.strftime("%H:%M:%S") if self.time else None,
             "dias_para_cita": self.dias_para_cita
         }
         return usuario_json
@@ -38,6 +38,6 @@ class Usuario (db.Model):
         date = dt.datetime.fromisoformat(date_str) if date_str else dt.datetime.now()
         time = dt.datetime.strptime(time_str, "%H:%M:%S").time() if time_str else dt.datetime.now().time()
         
-        dias_para_cita = (date - fecha_registro).days if fecha_registro and date else 0
+        dias_para_cita = (date.date() - fecha_registro.date()).days if fecha_registro and date else 0
         
-        return Usuario (id=id, name=name, telephone=telephone, fecha_registro=fecha_registro, date=date, dias_para_cita=dias_para_cita, time=time)
+        return Usuario(name=name, telephone=telephone, fecha_registro=fecha_registro, date=date, dias_para_cita=dias_para_cita, time=time)
