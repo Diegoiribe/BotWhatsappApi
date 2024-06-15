@@ -61,7 +61,7 @@ class Usuarios(Resource):
 
             if usuario.dias_para_cita == 0:
                 print(f"Enviando mensaje a {usuario.telephone}")
-                send_whatsapp_message(usuario.telephone, f"Hola {usuario.nombre}, tu cita es mañana.")
+                send_whatsapp_message(usuario.telephone, f"Hola {usuario.name}, tu cita es mañana.")
 
             return usuario.to_json(), 201
         except Exception as e:
