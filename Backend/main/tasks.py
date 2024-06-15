@@ -3,18 +3,18 @@ import json
 from datetime import datetime
 from flask import current_app
 from main import db
-from main.models import UsuarioModel
+from main.models.Usuario import Usuario as UsuarioModel  # Importación correcta del modelo
 
 def update_dias_para_cita():
     with current_app.app_context():
         usuarios = UsuarioModel.query.all()
         for usuario in usuarios:
-            dias_para_cita = (usuario.fecha_cita.date() - datetime.utcnow().date()).days
+            dias_para_cita = (usuario.date.date() - datetime.utcnow().date()).days  # Usa el atributo 'date'
             usuario.dias_para_cita = dias_para_cita
-            if dias_para_cita == 1:
+            if dias_para_cita == 0:
                 send_whatsapp_message(
-                    usuario.telefono,
-                    f"Hola {usuario.nombre}, tu cita es mañana."
+                    usuario.telephone,  # Asegúrate de usar 'telephone' en lugar de 'telefono'
+                    f"Hola {usuario.name}, tu cita es mañana."  # Asegúrate de usar 'name' en lugar de 'nombre'
                 )
         db.session.commit()
 

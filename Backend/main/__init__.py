@@ -15,15 +15,15 @@ def create_app():
 
     load_dotenv()
 
-    # PATH = os.getenv("DATABASE_PATH")
-    # DB_NAME = os.getenv("DATABASE_NAME")
-    # if not os.path.exists(f"{PATH}{DB_NAME}"):
-    #     os.makedirs(PATH, exist_ok=True)
-    #     with open(f"{PATH}{DB_NAME}", 'a'):
-    #         pass
+    PATH = os.getenv("DATABASE_PATH")
+    DB_NAME = os.getenv("DATABASE_NAME")
+    if not os.path.exists(f"{PATH}{DB_NAME}"):
+        os.makedirs(PATH, exist_ok=True)
+        with open(f"{PATH}{DB_NAME}", 'a'):
+            pass
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:FXzrHAFBqMCHPvOBYlHsOmhFlAlCShEW@roundhouse.proxy.rlwy.net:28653/railway"
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{PATH}{DB_NAME}"
 
     # Scheduler configuration
     app.config['SCHEDULER_API_ENABLED'] = True
