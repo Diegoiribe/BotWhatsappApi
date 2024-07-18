@@ -5,6 +5,8 @@ from main.models.Usuario import Usuario as UsuarioModel
 import datetime as dt
 import requests
 import json
+from sqlalchemy.exc import OperationalError
+import time
 
 # Argument parser
 usuario_parser = reqparse.RequestParser()
@@ -13,17 +15,32 @@ usuario_parser.add_argument('telephone', type=str, required=True, help='Telephon
 usuario_parser.add_argument('date', type=str, required=True, help='Date is required')
 usuario_parser.add_argument('time', type=str, required=True, help='Time is required')
 
+def retry(func):
+    def wrapper(*args, **kwargs):
+        retries = 3
+        for attempt in range(retries):
+            try:
+                return func(*args, **kwargs)
+            except OperationalError:
+                db.session.rollback()
+                time.sleep(2 ** attempt)  # Exponential backoff
+        return jsonify({"error": "Database connection lost. Please try again later."}), 500
+    return wrapper
+
 class Usuario(Resource):
+    @retry
     def get(self, id):
         usuario = db.session.query(UsuarioModel).get_or_404(id)
         return usuario.to_json()
     
+    @retry
     def delete(self, id):
         usuario = db.session.query(UsuarioModel).get_or_404(id)
         db.session.delete(usuario)
         db.session.commit()
         return '', 204
     
+    @retry
     def put(self, id):
         usuario = db.session.query(UsuarioModel).get_or_404(id)
         args = usuario_parser.parse_args()
@@ -39,8 +56,9 @@ class Usuario(Resource):
             return usuario.to_json(), 201
         except (ValueError, TypeError) as e:
             return {'error': str(e)}, 400
-    
+
 class Usuarios(Resource):
+    @retry
     def get(self):
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 5, type=int)
@@ -52,6 +70,7 @@ class Usuarios(Resource):
             'page': page
         })
     
+    @retry
     def post(self):
         args = usuario_parser.parse_args()
         try:

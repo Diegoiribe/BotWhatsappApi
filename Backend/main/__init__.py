@@ -15,13 +15,6 @@ def create_app():
 
     load_dotenv()
 
-    # PATH = os.getenv("DATABASE_PATH")
-    # DB_NAME = os.getenv("DATABASE_NAME")
-    # if not os.path.exists(f"{PATH}{DB_NAME}"):
-    #     os.makedirs(PATH, exist_ok=True)
-    #     with open(f"{PATH}{DB_NAME}", 'a'):
-    #         pass
-
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:ZTLWytKuBJwrUplmohhTNkqaDvksxRxt@roundhouse.proxy.rlwy.net:38637/railway"
 
@@ -43,8 +36,15 @@ def create_app():
 
     def wrapped_update_dias_para_cita():
         with app.app_context():
-            update_dias_para_cita()
+            try:
+                update_dias_para_cita()
+            except OperationalError:
+                db.session.rollback()
+            finally:
+                db.session.close()
 
     scheduler.add_job(id='update_dias_para_cita', func=wrapped_update_dias_para_cita, trigger='interval', days=1, next_run_time=datetime.now())
 
     return app
+
+
